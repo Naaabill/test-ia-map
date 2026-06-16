@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atlas Vols + OpenFreeMap</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css"
+    />
+    <link rel="stylesheet" href="/style.css" />
+    <script
+      src="https://unpkg.com/maplibre-gl/dist/maplibre-gl.js"
+      defer
+    ></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <button id="menu-toggle" class="icon-button menu-button" aria-label="Ouvrir le menu">
+      <span aria-hidden="true">☰</span>
+    </button>
+    <button
+      id="notification-button"
+      class="icon-button notification-button"
+      aria-label="Menu notifications NASA"
+    >
+      <span aria-hidden="true">🔔</span>
+    </button>
+    <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+
+    <div id="drawer" class="drawer">
+      <aside class="panel">
+        <div class="panel-header">
+          <h1>Vols monde</h1>
+          <button id="menu-close" class="icon-button" aria-label="Fermer le menu">
+            ×
+          </button>
+        </div>
+        <p class="subtitle">
+          Carte OpenFreeMap + itinéraire aérien géodésique entre deux aéroports.
+        </p>
+        <label for="from">Départ (IATA ou ville)</label>
+        <div class="field">
+          <input
+            id="from"
+            placeholder="CDG, CDG ou Paris"
+            autocomplete="off"
+          />
+          <div class="autocomplete" id="from-suggestions" hidden></div>
+        </div>
+        <label for="to">Arrivée (IATA ou ville)</label>
+        <div class="field">
+          <input
+            id="to"
+            placeholder="JFK, New York..."
+            autocomplete="off"
+          />
+          <div class="autocomplete" id="to-suggestions" hidden></div>
+        </div>
+        <button id="draw">Tracer la route</button>
+        <p id="status" class="status">Choisis deux aéroports pour tracer.</p>
+        <div class="metrics">
+          <div><strong>Distance</strong><span id="distance">—</span></div>
+          <div><strong>Durée estimée</strong><span id="duration">—</span></div>
+        </div>
+
+        <hr class="divider" />
+        <div class="section-title">Observations NASA</div>
+        <label for="apod-date">Date APOD (optionnel)</label>
+        <input id="apod-date" type="date" />
+        <button id="open-apod" type="button">Photo du jour</button>
+
+        <div class="nasa-row">
+          <button id="open-eonet" type="button">Événements naturels</button>
+          <button id="open-donki" type="button">DONKI</button>
+        </div>
+        <div class="nasa-row">
+          <button id="open-power" type="button">NASA POWER</button>
+          <button id="open-news" type="button">News</button>
+        </div>
+        <div id="power-controls" class="power-controls">
+          <label for="power-lat">Lat</label>
+          <input id="power-lat" type="number" step="0.01" value="48.85" />
+          <label for="power-lon">Lon</label>
+          <input id="power-lon" type="number" step="0.01" value="2.35" />
+          <label for="power-start">Début</label>
+          <input id="power-start" type="date" />
+          <label for="power-end">Fin</label>
+          <input id="power-end" type="date" />
+          <label for="power-params">Params</label>
+          <input id="power-params" value="T2M,WS10M,PS" />
+          <button id="load-power" type="button">Charger POWER</button>
+        </div>
+        <button id="open-ssd" type="button">SSD (Fireballs)</button>
+      </aside>
+    </div>
+
+    <section id="nasa-modal" class="nasa-modal" hidden>
+      <article class="nasa-modal__card">
+        <header class="nasa-modal__header">
+          <h2 id="nasa-modal-title"></h2>
+          <button
+            id="nasa-modal-close"
+            class="icon-button"
+            aria-label="Fermer le panneau"
+          >
+            ×
+          </button>
+        </header>
+        <div id="nasa-modal-body" class="nasa-modal__body">
+          <p>Chargement…</p>
+        </div>
+      </article>
+    </section>
+
+    <main id="map"></main>
+  </body>
+</html>

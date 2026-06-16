@@ -1,0 +1,16 @@
+{
+  "name": "map-avion-openfreemap",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "install-client": "echo 'static client bundled in /public'",
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "csv-parse": "^5.6.0",
+    "express": "^4.21.0"
+  }
+}
