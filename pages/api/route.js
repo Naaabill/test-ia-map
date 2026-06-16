@@ -1,6 +1,6 @@
 import { getRoute } from '../../lib/flightService.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Méthode non autorisée' });
     return;
@@ -18,3 +18,6 @@ export default async function handler(req, res) {
     });
   }
 }
+
+export { handler };
+export default handler;
