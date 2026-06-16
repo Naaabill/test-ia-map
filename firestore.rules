@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isValidLatitude(v) {
+      return v is number;
+    }
+
+    function isValidLongitude(v) {
+      return v is number;
+    }
+
+    function isValidCoordinatePayload(data) {
+      return data.keys().hasAll(['lat', 'lng', 'source', 'updatedAt']) &&
+        data.keys().hasOnly(['lat', 'lng', 'source', 'updatedAt']) &&
+        isValidLatitude(data.lat) &&
+        data.lat >= -90 &&
+        data.lat <= 90 &&
+        isValidLongitude(data.lng) &&
+        data.lng >= -180 &&
+        data.lng <= 180 &&
+        data.source is string &&
+        data.source.size() >= 1 &&
+        data.source.size() <= 64 &&
+        data.updatedAt is timestamp;
+    }
+
+    match /users/{uid}/locations/{docId} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isValidCoordinatePayload(request.resource.data);
+      allow delete: if isOwner(uid);
+    }
+  }
+}
