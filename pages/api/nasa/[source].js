@@ -2,6 +2,8 @@ import {
   getNasaApod,
   getNasaDonki,
   getNasaEonet,
+  getNasaMarsPhotos,
+  getNasaNeo,
   getNasaNews,
   getNasaPower,
   getNasaSsd,
@@ -20,6 +22,15 @@ export default async function handler(req, res) {
       const payload = await getNasaApod({
         date: req.query.date,
         hd: req.query.hd,
+      });
+      res.status(200).json(payload);
+      return;
+    }
+
+    if (source === 'neo') {
+      const payload = await getNasaNeo({
+        startDate: req.query.startDate,
+        endDate: req.query.endDate,
       });
       res.status(200).json(payload);
       return;
@@ -68,6 +79,18 @@ export default async function handler(req, res) {
     if (source === 'news') {
       const payload = await getNasaNews({
         perPage: req.query.per_page,
+      });
+      res.status(200).json(payload);
+      return;
+    }
+
+    if (source === 'mars') {
+      const payload = await getNasaMarsPhotos({
+        rover: req.query.rover,
+        camera: req.query.camera,
+        earthDate: req.query.earth_date,
+        sol: req.query.sol,
+        page: req.query.page,
       });
       res.status(200).json(payload);
       return;

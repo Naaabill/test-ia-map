@@ -61,6 +61,8 @@ Le backend lit :
 - `GET /api/nasa/donki?startDate=2026-06-01&endDate=2026-06-16`
 - `GET /api/nasa/ssd?limit=10`
 - `GET /api/nasa/news?per_page=8`
+- `GET /api/nasa/neo?startDate=2026-06-09&endDate=2026-06-16`
+- `GET /api/nasa/mars?rover=curiosity&camera=navcam&earth_date=2026-06-15`
 
 `POWER` attend des dates au format NASA (`YYYYMMDD`, sans tirets).
 
