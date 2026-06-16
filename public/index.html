@@ -16,7 +16,12 @@
     <script src="/app.js" defer></script>
   </head>
   <body>
-    <button id="menu-toggle" class="icon-button menu-button" aria-label="Ouvrir le menu">
+    <button
+      id="menu-toggle"
+      class="icon-button menu-button"
+      aria-label="Ouvrir/fermer le menu"
+      aria-expanded="false"
+    >
       <span aria-hidden="true">☰</span>
     </button>
     <button
@@ -32,9 +37,6 @@
       <aside class="panel">
         <div class="panel-header">
           <h1>Vols monde</h1>
-          <button id="menu-close" class="icon-button" aria-label="Fermer le menu">
-            ×
-          </button>
         </div>
         <p class="subtitle">
           Carte OpenFreeMap + itinéraire aérien géodésique entre deux aéroports.
@@ -67,7 +69,18 @@
         <hr class="divider" />
         <div class="section-title">Observations NASA</div>
         <label for="apod-date">Date APOD (optionnel)</label>
-        <input id="apod-date" type="date" />
+        <div class="date-field" data-date-field="apod-date">
+          <input id="apod-date" type="text" readonly />
+          <button
+            type="button"
+            class="icon-button date-trigger"
+            aria-label="Choisir une date"
+            aria-expanded="false"
+          >
+            📅
+          </button>
+          <div class="calendar-popover" hidden aria-hidden="true"></div>
+        </div>
         <button id="open-apod" type="button">Photo du jour</button>
 
         <div class="nasa-row">
@@ -84,9 +97,31 @@
           <label for="power-lon">Lon</label>
           <input id="power-lon" type="number" step="0.01" value="2.35" />
           <label for="power-start">Début</label>
-          <input id="power-start" type="date" />
+          <div class="date-field" data-date-field="power-start">
+            <input id="power-start" type="text" readonly />
+            <button
+              type="button"
+              class="icon-button date-trigger"
+              aria-label="Choisir une date de début"
+              aria-expanded="false"
+            >
+              📅
+            </button>
+            <div class="calendar-popover" hidden aria-hidden="true"></div>
+          </div>
           <label for="power-end">Fin</label>
-          <input id="power-end" type="date" />
+          <div class="date-field" data-date-field="power-end">
+            <input id="power-end" type="text" readonly />
+            <button
+              type="button"
+              class="icon-button date-trigger"
+              aria-label="Choisir une date de fin"
+              aria-expanded="false"
+            >
+              📅
+            </button>
+            <div class="calendar-popover" hidden aria-hidden="true"></div>
+          </div>
           <label for="power-params">Params</label>
           <input id="power-params" value="T2M,WS10M,PS" />
           <button id="load-power" type="button">Charger POWER</button>

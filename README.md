@@ -15,7 +15,7 @@ des aéroports à partir de codes IATA/ICAO/villes, avec intégration NASA dans 
 
 ```bash
 npm install
-npm start
+npm run dev
 ```
 
 Puis ouvrir :
@@ -23,6 +23,16 @@ Puis ouvrir :
 ```
 http://localhost:3000
 ```
+
+## Déploiement Cloudflare Pages (Next.js)
+
+```bash
+npm install
+npm run build
+npm start
+```
+
+Dans Cloudflare Pages, choisis **Next.js** comme framework et la commande de build `npm run build`.
 
 ## Variables d’environnement
 
@@ -37,6 +47,7 @@ Le backend lit :
 - `NASA_API_KEY` (recommandé pour APOD / DONKI),
 - `PORT` (optionnel),
 - `NASA_REQUEST_TIMEOUT_MS` (optionnel),
+- `NASA_REQUEST_RETRIES` (optionnel),
 - `REMOTE_AIRPORTS_URL`, `REMOTE_COUNTRIES_URL` (optionnel).
 
 ## API disponibles
