@@ -58,21 +58,6 @@ export default function Home() {
 
           <hr className="divider" />
           <div className="section-title">Observations NASA</div>
-          <label htmlFor="apod-date">Date APOD (optionnel)</label>
-          <div className="date-field" data-date-field="apod-date">
-            <input id="apod-date" type="text" readOnly />
-            <button
-              type="button"
-              className="icon-button date-trigger"
-              aria-label="Choisir une date"
-              aria-expanded="false"
-            >
-              📅
-            </button>
-            <div className="calendar-popover" hidden aria-hidden="true" />
-          </div>
-          <button id="open-apod" type="button">Photo du jour</button>
-
           <div className="nasa-row">
             <button id="open-eonet" type="button">Événements naturels</button>
             <button id="open-donki" type="button">DONKI</button>

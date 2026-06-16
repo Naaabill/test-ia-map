@@ -31,8 +31,6 @@
   const drawer = document.getElementById('drawer');
   const backdrop = document.getElementById('drawer-backdrop');
   const notificationButton = document.getElementById('notification-button');
-  const apodDate = document.getElementById('apod-date');
-  const openApod = document.getElementById('open-apod');
   const openEonet = document.getElementById('open-eonet');
   const openDonki = document.getElementById('open-donki');
   const openPower = document.getElementById('open-power');
@@ -49,15 +47,17 @@
   const nasaModalTitle = document.getElementById('nasa-modal-title');
   const nasaModalBody = document.getElementById('nasa-modal-body');
   const nasaModalClose = document.getElementById('nasa-modal-close');
-  const dateInputElements = [apodDate, powerStart, powerEnd];
+  const dateInputElements = [powerStart, powerEnd];
   const mapOverlays = {
     markers: {
       wind: [],
       cloud: [],
       fire: [],
+      events: [],
     },
   };
   let activeNasaPopup = null;
+  let activeNasaLayerMode = 'none';
 
   const state = {
     from: 'CDG',
@@ -184,44 +184,34 @@
 
     map.addLayer({
       id: 'nasa-event-layer',
-      type: 'circle',
+      type: 'symbol',
       source: 'nasa-events',
+      layout: {
+        'icon-allow-overlap': true,
+        'text-allow-overlap': true,
+        'text-field': ['get', 'symbol'],
+        'text-size': 22,
+        'text-font': ['Open Sans Bold', 'Noto Color Emoji', 'Arial Unicode MS', 'sans-serif'],
+        'text-justify': 'center',
+      },
       paint: {
-        'circle-color': [
+        'text-color': [
           'match',
           ['get', 'kind'],
           'fire',
           '#ff4d5e',
-          'cloud',
-          'rgba(230, 230, 230, 0.95)',
+          'donki',
+          '#f59e0b',
           'wind',
           '#6de3ff',
+          'cloud',
+          'rgba(230, 230, 230, 0.95)',
           'eonet',
           '#f97316',
           '#4f7cdb',
         ],
-        'circle-radius': ['coalesce', ['get', 'radius'], 10],
-        'circle-opacity': 0.9,
-        'circle-stroke-color': '#ffffff',
-        'circle-stroke-width': 1,
-        'circle-stroke-opacity': 0.7,
-      },
-    });
-
-    map.addLayer({
-      id: 'nasa-event-labels',
-      type: 'symbol',
-      source: 'nasa-events',
-      layout: {
-        'text-field': ['get', 'symbol'],
-        'text-size': 14,
-        'text-offset': [0, -1.5],
-        'text-allow-overlap': false,
-      },
-      paint: {
-        'text-color': '#ffffff',
-        'text-halo-color': 'rgba(0,0,0,0.45)',
-        'text-halo-width': 1.2,
+        'text-halo-color': 'rgba(0,0,0,0.38)',
+        'text-halo-width': 1.5,
       },
     });
 
@@ -237,8 +227,11 @@
 
       const properties = feature.properties || {};
       const title = toText(properties.title || properties.name || properties.kind || 'Événement');
-      const subtitle = toText(properties.subtitle || properties.message || '');
-      showNasaPopup(event.lngLat, `<strong>${title}</strong><br>${subtitle}`);
+      const details = toText(properties.details || properties.subtitle || properties.message || properties.description || '');
+      const html = details
+        ? `<strong>${title}</strong><br>${details}`
+        : `<strong>${title}</strong><br>Plus d'information: clic sur la carte`;
+      showNasaPopup(event.lngLat, html);
     });
     map.on('click', (event) => {
       const hit = map.queryRenderedFeatures(event.point, {
@@ -252,7 +245,6 @@
     fields.to.input.value = state.to;
     setDateValue(powerStart, isoDateDaysAgo(-7));
     setDateValue(powerEnd, isoDateDaysAgo(0));
-    setDateValue(apodDate, isoDateDaysAgo(0));
     drawButton.click();
   });
 
@@ -270,9 +262,6 @@
     }
   });
 
-  openApod.addEventListener('click', async () => {
-    await showApod();
-  });
   openEonet.addEventListener('click', async () => {
     await showEonet();
   });
@@ -388,66 +377,16 @@
     menuToggle.setAttribute('aria-expanded', 'false');
   }
 
-  async function showApod() {
-    showModal();
-    nasaModalTitle.textContent = 'NASA APOD';
-    nasaModalBody.innerHTML = '<p>Chargement…</p>';
-    closeDrawer();
+  function showActiveNasaMode(nextMode) {
     clearNasaVisuals();
-
-    try {
-      const params = {};
-      if (apodDate.value) params.date = apodDate.value;
-      const apod = await fetchNasaJson('apod', params);
-      const title = toText(apod.title);
-      const body = apod.explanation || '';
-      const card = document.createElement('div');
-      card.className = 'nasa-list';
-      const titleRow = document.createElement('h3');
-      titleRow.textContent = title;
-      const meta = document.createElement('div');
-      meta.className = 'nasa-meta';
-      meta.textContent = `${apod.date || ''} · ${apod.mediaType || ''}`;
-      const bodyText = document.createElement('p');
-      bodyText.textContent = body;
-      bodyText.className = 'nasa-card p';
-      card.appendChild(titleRow);
-      card.appendChild(meta);
-
-      if (apod.mediaType === 'image' && apod.url) {
-        const image = document.createElement('img');
-        image.className = 'nasa-media';
-        image.src = apod.url;
-        image.alt = title;
-        card.appendChild(image);
-      } else if (apod.url) {
-        const link = document.createElement('a');
-        link.href = apod.url;
-        link.textContent = 'Ouvrir le média';
-        link.target = '_blank';
-        link.rel = 'noreferrer';
-        card.appendChild(link);
-      }
-
-      card.appendChild(bodyText);
-      if (apod.copyright) {
-        const credit = document.createElement('p');
-        credit.className = 'nasa-meta';
-        credit.textContent = `© ${apod.copyright}`;
-        card.appendChild(credit);
-      }
-
-      nasaModalBody.replaceChildren(card);
-    } catch (error) {
-      nasaModalBody.replaceChildren(renderError(`APOD: ${error.message}`));
-    }
+    activeNasaLayerMode = nextMode;
   }
 
   async function showEonet() {
     showModal('Événements naturels (EONET)', '');
     nasaModalBody.innerHTML = '<p>Chargement…</p>';
     closeDrawer();
-    clearNasaVisuals();
+    showActiveNasaMode('events');
     try {
       const data = await fetchNasaJson('eonet', {
         days: '14',
@@ -461,32 +400,7 @@
         container.appendChild(renderEmpty('Aucun événement naturel actif trouvé.'));
       } else {
         renderEonetOnMap(data.events);
-        data.events.forEach((event) => {
-          const card = document.createElement('div');
-          card.className = 'nasa-card';
-          const title = document.createElement('h3');
-          title.textContent = toText(event.title || `Événement ${event.id || ''}`);
-          const meta = document.createElement('div');
-          meta.className = 'nasa-meta';
-          const closed = event.closed ? `Clos: ${event.closed}` : 'En cours';
-          const categories = Array.isArray(event.categories)
-            ? event.categories.map((c) => c.title).filter(Boolean).join(', ')
-            : '';
-          meta.textContent = `ID: ${event.id || 'N/A'} · ${closed}${categories ? ` · ${categories}` : ''}`;
-          const sourceLink = document.createElement('a');
-          sourceLink.href = event.link || '#';
-          sourceLink.target = '_blank';
-          sourceLink.rel = 'noreferrer';
-          sourceLink.textContent = 'Voir la fiche';
-          const desc = document.createElement('p');
-          desc.textContent = toText(event.description || '');
-
-          card.appendChild(title);
-          card.appendChild(meta);
-          if (desc.textContent) card.appendChild(desc);
-          card.appendChild(sourceLink);
-          container.appendChild(card);
-        });
+        container.appendChild(renderInfoOnly('Clique sur un logo sur la carte pour voir les détails.'));
       }
       nasaModalBody.replaceChildren(container);
     } catch (error) {
@@ -498,7 +412,7 @@
     showModal('DONKI', '');
     nasaModalBody.innerHTML = '<p>Chargement…</p>';
     closeDrawer();
-    clearNasaVisuals();
+    showActiveNasaMode('events');
     try {
       const end = isoDateDaysAgo(0);
       const start = isoDateDaysAgo(-14);
@@ -546,7 +460,7 @@
     nasaModalBody.innerHTML = '<p>Chargement…</p>';
     closeDrawer();
     powerControls.classList.add('is-open');
-    clearNasaVisuals();
+    showActiveNasaMode('weather');
 
     const lat = Number.parseFloat(powerLat.value);
     const lon = Number.parseFloat(powerLon.value);
@@ -622,7 +536,7 @@
     showModal('NASA SSD (Fireball)', '');
     nasaModalBody.innerHTML = '<p>Chargement…</p>';
     closeDrawer();
-    clearNasaVisuals();
+    showActiveNasaMode('events');
     try {
       const data = await fetchNasaJson('ssd', {
         limit: '10',
@@ -662,6 +576,7 @@
     showModal('NASA News', '');
     nasaModalBody.innerHTML = '<p>Chargement…</p>';
     closeDrawer();
+    showActiveNasaMode('none');
     try {
       const data = await fetchNasaJson('news', {
         per_page: '8',
@@ -914,12 +829,21 @@
     return String(value || '');
   }
 
+  function renderInfoOnly(message) {
+    const card = document.createElement('div');
+    card.className = 'nasa-info';
+    card.textContent = message;
+    return card;
+  }
+
   function clearNasaVisuals() {
     hideNasaPopup();
     ['wind', 'cloud', 'fire'].forEach((type) => {
       (mapOverlays.markers[type] || []).forEach((marker) => marker.remove());
       mapOverlays.markers[type] = [];
     });
+    (mapOverlays.markers.events || []).forEach((marker) => marker.remove());
+    mapOverlays.markers.events = [];
 
     if (map.getSource('nasa-weather')?.setData) {
       map.getSource('nasa-weather').setData(emptyPoints());
@@ -938,6 +862,9 @@
   function addNasaMarker(type, lngLat, options = {}) {
     const markerElement = document.createElement('div');
     markerElement.className = `nasa-overlay-marker nasa-overlay-marker--${type}`;
+    if (options.variant) {
+      markerElement.classList.add(`nasa-overlay-marker--${options.variant}`);
+    }
     if (options.angle !== undefined) {
       markerElement.style.setProperty('--nasa-angle', `${options.angle}deg`);
     }
@@ -954,10 +881,32 @@
       markerElement.appendChild(label);
     }
 
+    if (options.rain) {
+      const rain = document.createElement('div');
+      rain.className = 'nasa-overlay-rain';
+      for (let i = 0; i < 4; i += 1) {
+        const drop = document.createElement('span');
+        drop.className = 'nasa-overlay-drop';
+        drop.style.left = `${4 + i * 9}px`;
+        drop.style.animationDelay = `${i * 0.25}s`;
+        rain.appendChild(drop);
+      }
+      markerElement.appendChild(rain);
+    }
+
     const marker = new maplibregl.Marker({
       element: markerElement,
       anchor: 'center',
     }).setLngLat(lngLat).addTo(map);
+
+    if (options.popup) {
+      markerElement.classList.add('nasa-overlay-marker--clickable');
+      markerElement.style.cursor = 'pointer';
+      markerElement.addEventListener('click', (event) => {
+        event.stopPropagation();
+        showNasaPopup(lngLat, options.popup);
+      });
+    }
 
     if (!mapOverlays.markers[type]) mapOverlays.markers[type] = [];
     mapOverlays.markers[type].push(marker);
@@ -1066,6 +1015,14 @@
           : '';
         const closed = event.closed ? `Clos: ${event.closed}` : 'En cours';
         const subtitle = `${closed}${categories ? ` · ${categories}` : ''}`;
+        const source = event.link ? `<a href="${event.link}" target="_blank" rel="noreferrer">Voir la fiche</a>` : '';
+        const description = [
+          toText(event.description),
+          subtitle,
+          toText(source),
+        ]
+          .filter(Boolean)
+          .join(' · ');
 
         return {
           type: 'Feature',
@@ -1076,7 +1033,7 @@
           properties: {
             kind: 'eonet',
             title: name,
-            subtitle,
+            details: description,
             symbol: '🌋',
             radius: 11,
           },
@@ -1099,7 +1056,13 @@
     const visible = events
       .map((entry) => {
         const title = toText(entry.messageType || 'Notification');
-        const subtitle = `${entry.messageID || ''} ${entry.messageIssueTime ? `· ${entry.messageIssueTime}` : ''}`.trim();
+        const subtitle = [
+          toText(entry.messageID),
+          toText(entry.messageIssueTime ? `Publié: ${entry.messageIssueTime}` : ''),
+          toText(entry.messageBody),
+        ]
+          .filter(Boolean)
+          .join(' · ');
         const coords = pickEventPoint(entry);
 
         if (!coords) {
@@ -1126,9 +1089,10 @@
               coordinates: [center.lng, center.lat],
             },
             properties: {
-              kind: 'wind',
+              kind: 'donki',
               title: 'Notifications DONKI',
               subtitle: `${count} notification(s) sans coordonnées`,
+              details: `${count} notification(s) sans coordonnées`,
               symbol: '☄',
               radius: 12,
             },
@@ -1147,9 +1111,10 @@
           coordinates: entry.coords,
         },
         properties: {
-          kind: 'wind',
+          kind: 'donki',
           title: entry.title,
           subtitle: entry.subtitle,
+          details: entry.subtitle,
           symbol: '☄',
           radius: 12,
         },
@@ -1298,6 +1263,7 @@
 
     if (cloud != null) {
       const intensity = Math.max(20, Math.min(68, cloud));
+      const isRain = cloud >= 60;
       map.getSource('nasa-clouds').setData({
         type: 'FeatureCollection',
         features: [
@@ -1311,16 +1277,25 @@
               kind: 'cloud',
               radius: intensity * 0.65,
               cloud: cloud,
-              symbol: '☁',
+              symbol: isRain ? '🌧' : '☁',
+              title: `Nuages: ${cloud}%`,
+              details: isRain
+                ? `Couv. nuageuse élevée (${cloud}%). Conditions de pluie probables.`
+                : `Couvercle nuageux: ${cloud}%`,
             },
           },
         ],
       });
 
       addNasaMarker('cloud', [lon, lat], {
-        icon: '☁',
+        icon: isRain ? '🌧' : '☁',
         value: cloud,
         unit: '%',
+        variant: isRain ? 'cloud-rain' : 'cloud',
+        rain: isRain,
+        popup: isRain
+          ? `<strong>Météo POWER</strong><br>Couvercle nuageux: ${cloud}% avec pluie probable.`
+          : `<strong>Météo POWER</strong><br>Couvercle nuageux: ${cloud}%`,
       });
     }
 
